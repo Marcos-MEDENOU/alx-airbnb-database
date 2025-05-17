@@ -1,6 +1,30 @@
 -- Database Indexes for Optimization
 -- This file contains CREATE INDEX commands for high-usage columns in the Airbnb database
 
+-- Performance Measurement Section
+-- First, let's measure the performance of some common queries BEFORE adding indexes
+
+-- Measure performance of user lookup by email
+EXPLAIN ANALYZE SELECT * FROM User WHERE Email = 'example@email.com';
+
+-- Measure performance of property search by location and price
+EXPLAIN ANALYZE SELECT * FROM Property WHERE City = 'New York' AND PricePerNight BETWEEN 100 AND 300;
+
+-- Measure performance of booking search by date range
+EXPLAIN ANALYZE SELECT p.*, b.CheckInDate, b.CheckOutDate 
+FROM Property p 
+JOIN Booking b ON p.PropertyID = b.PropertyID 
+WHERE b.CheckInDate >= '2023-01-01' AND b.CheckOutDate <= '2023-12-31';
+
+-- Measure performance of finding top-rated properties
+EXPLAIN ANALYZE SELECT p.*, AVG(r.Rating) as AvgRating 
+FROM Property p 
+JOIN Booking b ON p.PropertyID = b.PropertyID 
+JOIN Review r ON b.BookingID = r.BookingID 
+GROUP BY p.PropertyID 
+ORDER BY AvgRating DESC 
+LIMIT 10;
+
 -- User Table Indexes
 -- Index on Email (used in login queries and uniqueness checks)
 CREATE INDEX idx_user_email ON User(Email);
@@ -53,3 +77,35 @@ CREATE INDEX idx_payment_status ON Payment(PaymentStatus);
 
 -- Index on PaymentDate (used in date range queries and reporting)
 CREATE INDEX idx_payment_date ON Payment(PaymentDate);
+
+-- Performance Measurement Section
+-- Now, let's measure the performance of the same queries AFTER adding indexes
+
+-- Measure performance of user lookup by email after adding index
+EXPLAIN ANALYZE SELECT * FROM User WHERE Email = 'example@email.com';
+
+-- Measure performance of property search by location and price after adding indexes
+EXPLAIN ANALYZE SELECT * FROM Property WHERE City = 'New York' AND PricePerNight BETWEEN 100 AND 300;
+
+-- Measure performance of booking search by date range after adding indexes
+EXPLAIN ANALYZE SELECT p.*, b.CheckInDate, b.CheckOutDate 
+FROM Property p 
+JOIN Booking b ON p.PropertyID = b.PropertyID 
+WHERE b.CheckInDate >= '2023-01-01' AND b.CheckOutDate <= '2023-12-31';
+
+-- Measure performance of finding top-rated properties after adding indexes
+EXPLAIN ANALYZE SELECT p.*, AVG(r.Rating) as AvgRating 
+FROM Property p 
+JOIN Booking b ON p.PropertyID = b.PropertyID 
+JOIN Review r ON b.BookingID = r.BookingID 
+GROUP BY p.PropertyID 
+ORDER BY AvgRating DESC 
+LIMIT 10;
+
+-- Note: Compare the execution plans and timing information between the before and after sections
+-- Look for changes in:
+-- 1. Scan methods (Sequential Scan vs Index Scan)
+-- 2. Execution time
+-- 3. Planning time
+-- 4. Number of rows processed
+-- 5. Join algorithms used
