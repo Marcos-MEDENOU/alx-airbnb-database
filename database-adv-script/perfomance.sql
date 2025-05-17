@@ -139,6 +139,57 @@ WHERE
 ORDER BY 
     b.BookingDate DESC, p.PricePerNight DESC;
 
+-- Query with Multiple AND Conditions
+-- This query demonstrates the use of multiple filtering conditions that can benefit from indexes
+
+EXPLAIN ANALYZE
+SELECT 
+    b.BookingID,
+    b.CheckInDate,
+    b.CheckOutDate,
+    b.TotalPrice,
+    b.NumberOfGuests,
+    b.BookingStatus,
+    b.BookingDate,
+    
+    -- Guest Information
+    g.UserID AS GuestID,
+    g.FirstName AS GuestFirstName,
+    g.LastName AS GuestLastName,
+    g.Email AS GuestEmail,
+    
+    -- Property Information
+    p.PropertyID,
+    p.Title AS PropertyTitle,
+    p.PropertyType,
+    p.PricePerNight,
+    p.NumberOfBedrooms,
+    
+    -- Payment Information
+    pay.PaymentID,
+    pay.Amount AS PaymentAmount,
+    pay.PaymentDate,
+    pay.PaymentStatus
+FROM 
+    Booking b
+JOIN 
+    User g ON b.GuestID = g.UserID
+JOIN 
+    Property p ON b.PropertyID = p.PropertyID
+JOIN 
+    Address a ON p.AddressID = a.AddressID
+LEFT JOIN 
+    Payment pay ON b.BookingID = pay.BookingID
+WHERE 
+    b.BookingDate >= '2024-01-01' AND
+    b.BookingStatus = 'Confirmed' AND
+    p.PropertyType = 'Apartment' AND
+    p.PricePerNight BETWEEN 100 AND 300 AND
+    a.City = 'New York' AND
+    pay.PaymentStatus = 'Completed'
+ORDER BY 
+    b.BookingDate DESC;
+
 -- Optimized Query
 -- This query has been refactored to improve performance
 
